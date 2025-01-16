@@ -15,16 +15,18 @@ const (
 )
 
 var testQuery *Queries
+var testDB *sql.DB
 
 func TestMain(m *testing.M) {
 	// conn, err := pgx.Connect(context.Background(), dbSource)
-	conn, err := sql.Open(dbDriver, dbSource)
+	var err error
+	testDB, err = sql.Open(dbDriver, dbSource)
 
 	if err != nil {
 		log.Fatal((err))
 	}
 
-	testQuery = New(conn)
+	testQuery = New(testDB)
 
 	os.Exit(m.Run())
 }

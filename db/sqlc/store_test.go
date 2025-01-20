@@ -101,6 +101,52 @@ func TestTransaction(t *testing.T) {
 	resultAccount2, err := store.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
-	require.Equal(t, account1.Balance -  int64(n) * amount, resultAccount1.Balance)
-	require.Equal(t, account2.Balance +  int64(n) * amount, resultAccount2.Balance)
+	require.Equal(t, account1.Balance-int64(n)*amount, resultAccount1.Balance)
+	require.Equal(t, account2.Balance+int64(n)*amount, resultAccount2.Balance)
+}
+
+func TestTransactionDeadlock(t *testing.T) {
+	store := NewStore(testDB)
+
+	account1 := CreateRandomAccount(t)
+	account2 := CreateRandomAccount(t)
+
+	var amount int64 = util.RandomMoney()
+	n := 10
+
+	errs := make(chan error)
+
+	for i := 0; i < n; i++ {
+		fromAccountId := account1.ID
+		toAccountId := account2.ID
+		if i%2 == 1 {
+			fromAccountId = account2.ID
+			toAccountId = account1.ID
+		}
+
+		go func() {
+			_, err := store.TransferTx(context.Background(), TransferTxParams{
+				FromAccountId: fromAccountId,
+				ToAccountId:   toAccountId,
+				Amount:        amount,
+			})
+			require.NoError(t, err)
+
+			errs <- err
+		}()
+	}
+
+	for i := 0; i < n; i++ {
+		err := <-errs
+		require.NoError(t, err)
+	}
+
+	resultAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+
+	resultAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	require.NoError(t, err)
+
+	require.Equal(t, account1.Balance, resultAccount1.Balance)
+	require.Equal(t, account2.Balance, resultAccount2.Balance)
 }

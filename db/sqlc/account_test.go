@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"testing"
 	"time"
 
@@ -73,7 +72,6 @@ func TestDeleteAccount(t *testing.T) {
 	require.NoError(t, err)
 
 	account2, err := testQuery.GetAccount(context.Background(), account.ID)
-	fmt.Print(err)
 	require.Error(t, err)
 	require.EqualError(t, err, sql.ErrNoRows.Error())
 	require.Empty(t, account2)

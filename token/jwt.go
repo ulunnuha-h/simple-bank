@@ -44,8 +44,8 @@ func (generator *JWTGenerator) Verify(token string) (*Payload, error){
 
 	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
 	if err != nil{
-		if strings.Contains(err.Error(), ErrEpiredToken.Error()){
-			return nil, ErrEpiredToken
+		if strings.Contains(err.Error(), ErrExpiredToken.Error()){
+			return nil, ErrExpiredToken
 		}
 		return nil, ErrInvalidToken
 	}

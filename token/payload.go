@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrEpiredToken = errors.New("token is expired")
+	ErrExpiredToken = errors.New("token is expired")
 	ErrInvalidToken = errors.New("invalid token")
 )
 
@@ -23,6 +23,7 @@ type Payload struct {
 	Subject   string   `json:"subject,omitempty"`
 	Audience  []string `json:"aud,omitempty"`
 	NotBefore time.Time `json:"nbf,omitempty"`
+	Footer 	  string   `json:"footer"`
 }
 
 // GetAudience implements jwt.Claims.
@@ -68,6 +69,7 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 		Username:  username,
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
+		NotBefore: time.Now(),
 	}
 
 	return payload, nil

@@ -8,8 +8,8 @@ import (
 	"github.com/ulunnuha-h/simple_bank/util"
 )
 
-func TestGenerateJWTToken(t *testing.T){
-	generator, err := NewJWTGenerator(util.RandomString(32))
+func TestGeneratePasetoToken(t *testing.T){
+	generator, err := NewPasetoGenerator(util.RandomString(32))
 	require.NoError(t, err)
 
 	username := util.RandomOwner()
@@ -32,15 +32,15 @@ func TestGenerateJWTToken(t *testing.T){
 	require.WithinDuration(t, expiredAt, payload.ExpiredAt, time.Second)
 }
 
-func TestExpiredToken(t *testing.T){
-	generator, err := NewJWTGenerator(util.RandomString(32))
+func TestExpiredPasetoToken(t *testing.T){
+	generator, err := NewPasetoGenerator(util.RandomString(32))
 	require.NoError(t, err)
 
 	token, err := generator.CreateToken(util.RandomOwner(), -time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
-	payload, err := generator.Verify(token)
+	payload, err := generator.Verify(token)	
 	
 	require.Error(t, err)
 	require.EqualError(t, err, ErrExpiredToken.Error())

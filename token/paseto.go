@@ -2,7 +2,6 @@ package token
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/o1egl/paseto"
@@ -35,9 +34,6 @@ func (generator *PasetoGenerator) Verify(token string) (*Payload, error){
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
-
-	log.Print(payload.ExpiredAt.After(time.Now()))
-	log.Print(payload.ExpiredAt, time.Now())
 
 	if !payload.ExpiredAt.After(time.Now()) {
 		return nil, ErrExpiredToken

@@ -10,7 +10,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := util.LoadConfig("../..")
+	err := util.LoadConfig("../.")
 	if err != nil {
 		log.Fatal("Failed to load .env file")
 	}

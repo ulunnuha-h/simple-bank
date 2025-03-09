@@ -88,7 +88,8 @@ func TestGetAccountAPI(t *testing.T){
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := NewServer(store)
+		server, err := NewServer(store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 
 		url := fmt.Sprintf("/accounts/%d", tc.accountId)
@@ -164,7 +165,8 @@ func TestCreateAccountAPI(t *testing.T){
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := NewServer(store)
+		server, err := NewServer(store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 
 		url := "/accounts"
@@ -265,7 +267,8 @@ func TestListAccountAPI(t *testing.T){
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := NewServer(store)
+		server, err := NewServer(store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 
 		url := fmt.Sprintf("/accounts?page_id=%d&page_size=%d", tc.query.PAGE_ID, tc.query.PAGE_SIZE) 
@@ -382,7 +385,8 @@ func TestDeleteAccountAPI(t *testing.T){
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := NewServer(store)
+		server, err := NewServer(store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 
 		url := fmt.Sprintf("/accounts/%d", tc.accountId) 
@@ -492,7 +496,8 @@ func TestUpdateAccountAPI(t *testing.T){
 		store := mockdb.NewMockStore(ctrl)
 		tc.buildStubs(store)
 
-		server := NewServer(store)
+		server, err := NewServer(store)
+		require.NoError(t, err)
 		recorder := httptest.NewRecorder()
 
 		url := fmt.Sprintf("/accounts/%d", tc.accountId) 

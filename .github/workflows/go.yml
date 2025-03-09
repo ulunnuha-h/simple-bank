@@ -24,7 +24,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
+    environment: Development
     steps:
     - uses: actions/checkout@v4
 
@@ -40,6 +40,13 @@ jobs:
 
     - name: Migrate Database Up
       run : make migrateup
+
+    - name: Create app.env file
+      run: |
+        echo "DB_DRIVER=${{ secrets.DB_DRIVER }}" >> app.env
+        echo "DB_SOURCE=${{ secrets.DB_SOURCE }}" >> app.env
+        echo "SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}" >> app.env
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> app.env
 
     - name: Test
       run: make test

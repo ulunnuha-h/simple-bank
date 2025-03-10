@@ -171,7 +171,6 @@ func TestCreateAccountAPI(t *testing.T){
 
 		url := "/accounts"
 		accountRequest := &createAccountRequest{
-			Owner: tc.account.Owner,
 			Currency: tc.account.Currency,
 		}
 

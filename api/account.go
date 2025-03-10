@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	db "github.com/ulunnuha-h/simple_bank/db/sqlc"
+	"github.com/ulunnuha-h/simple_bank/token"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,oneof=USD EUR IDR"`
 }
 
@@ -21,8 +21,13 @@ func (server *Server) createAccount(ctx *gin.Context){
 		return
 	}
 
+	authPayload, err := GetAuthPayload(ctx)
+	if err != nil {
+		return
+	}
+
 	args := db.CreateAccountParams{
-		Owner: req.Owner,
+		Owner: authPayload.Username,
 		Currency: req.Currency,
 		Balance: 0,
 	}
@@ -55,6 +60,11 @@ func (server *Server) getAccount(ctx *gin.Context){
 		return
 	}
 
+	authPayload, err := GetAuthPayload(ctx)
+	if err != nil {
+		return
+	}
+
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if(err == sql.ErrNoRows){
@@ -62,6 +72,11 @@ func (server *Server) getAccount(ctx *gin.Context){
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if(account.Owner != authPayload.Username) {
+		ctx.JSON(http.StatusForbidden, errorResponse(token.ErrDoesNotBelong))
 		return
 	}
 
@@ -80,7 +95,13 @@ func (server *Server) listAccount(ctx *gin.Context){
 		return
 	}
 
+	authPayload, err := GetAuthPayload(ctx)
+	if err != nil {
+		return
+	}
+
 	args := db.ListAccountsParams{
+		Owner: authPayload.Username,
 		Limit: req.PAGE_SIZE,
 		Offset: (req.PAGE_ID - 1) * req.PAGE_SIZE,
 	}
@@ -105,13 +126,23 @@ func (server *Server) deleteAccount(ctx *gin.Context){
 		return
 	}
 
-	_, err := server.store.GetAccount(ctx, req.ID)
+	authPayload, err := GetAuthPayload(ctx)
+	if err != nil {
+		return
+	}
+
+	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if(err == sql.ErrNoRows){
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if(account.Owner != authPayload.Username){
+		ctx.JSON(http.StatusForbidden, errorResponse(token.ErrActionForbidden))
 		return
 	}
 

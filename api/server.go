@@ -28,14 +28,21 @@ func NewServer(store db.Store) (*Server, error){
 		tokenGenerator: tokenGenerator,
 	}
 
-	router := gin.Default()
-
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", currencyValidator)
 	}
 
+	server.router = setupRouter(server)
+	return server, nil
+}
+
+func setupRouter(server *Server) *gin.Engine{
+	router := gin.Default()
+
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
+
+	router.Use(AuthMiddleware(server.tokenGenerator))
 
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
@@ -44,9 +51,7 @@ func NewServer(store db.Store) (*Server, error){
 	router.PUT("/accounts/:id", server.updateAccount)
 
 	router.POST("/transfers", server.createTransfer)
-
-	server.router = router
-	return server, nil
+	return router
 }
 
 func (server *Server) Start(address string) error{

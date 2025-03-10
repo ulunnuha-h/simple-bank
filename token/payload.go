@@ -11,6 +11,9 @@ import (
 var (
 	ErrExpiredToken = errors.New("token is expired")
 	ErrInvalidToken = errors.New("invalid token")
+	ErrAuthNotProvided = errors.New("authentication is not provided")
+	ErrActionForbidden = errors.New("action is forbidden")
+	ErrDoesNotBelong = errors.New("this resource doesn't belong to logged user")
 )
 
 type Payload struct {

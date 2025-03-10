@@ -23,8 +23,13 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !server.validateAccount(ctx, req.FromAccountId, req.Currency, req.Amount, true) ||
-		!server.validateAccount(ctx, req.ToAccountId, req.Currency, 0, false) {
+	authPayload, err := GetAuthPayload(ctx)
+	if err != nil {
+		return
+	}
+
+	if !server.validateAccount(ctx, req.FromAccountId, req.Currency, req.Amount, true, authPayload.Username) ||
+		!server.validateAccount(ctx, req.ToAccountId, req.Currency, 0, false, "") {
 		return
 	}
 
@@ -43,7 +48,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (server *Server) validateAccount(ctx *gin.Context, accountID int64, currency string, amount int64, checkBalance bool) bool {
+func (server *Server) validateAccount(ctx *gin.Context, accountID int64, currency string, amount int64, checkBalance bool, username string) bool {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -51,6 +56,11 @@ func (server *Server) validateAccount(ctx *gin.Context, accountID int64, currenc
 			status = http.StatusNotFound
 		}
 		ctx.JSON(status, errorResponse(err))
+		return false
+	}
+
+	if(account.Owner != username && checkBalance) {
+		ctx.JSON(http.StatusForbidden, errorResponse(fmt.Errorf("user [%s] does not have access to account with ID %d", username, accountID)))
 		return false
 	}
 

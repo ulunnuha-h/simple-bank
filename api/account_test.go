@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	mockdb "github.com/ulunnuha-h/simple_bank/db/mock"
@@ -19,6 +20,8 @@ import (
 
 func TestGetAccountAPI(t *testing.T){
 	account := randomAccount();
+	testUser, _ := randomUser();
+	account.Owner = testUser.Username
 
 	testCases := []struct{
 		name string
@@ -96,6 +99,8 @@ func TestGetAccountAPI(t *testing.T){
 		request, err := http.NewRequest(http.MethodGet, url, nil)
 		require.NoError(t, err)
 
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, testUser.Username, time.Minute)
+
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)
 	}
@@ -104,8 +109,9 @@ func TestGetAccountAPI(t *testing.T){
 
 func TestCreateAccountAPI(t *testing.T){
 	testAccount := randomAccount();
+	testUser, _ := randomUser();
 	args := db.CreateAccountParams{
-		Owner: testAccount.Owner,
+		Owner: testUser.Username,
 		Balance: 0,
 		Currency: testAccount.Currency,
 	}
@@ -180,6 +186,8 @@ func TestCreateAccountAPI(t *testing.T){
 		request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 		require.NoError(t, err)
 
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, testUser.Username, time.Minute)
+
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)
 	}
@@ -188,8 +196,10 @@ func TestCreateAccountAPI(t *testing.T){
 func TestListAccountAPI(t *testing.T){
 	var n = 5
 	accounts := make([]db.Account, n)
+	testUser, _ := randomUser();
 	for i := range n {
 		accounts[i] = randomAccount()
+		accounts[i].Owner = testUser.Username
 	}
 
 	testCases := []struct{
@@ -206,6 +216,7 @@ func TestListAccountAPI(t *testing.T){
 			},
 			buildStubs: func (store *mockdb.MockStore)  {
 				args := db.ListAccountsParams{
+					Owner: testUser.Username,
 					Limit: 5,
 					Offset: 0,
 				}
@@ -228,6 +239,7 @@ func TestListAccountAPI(t *testing.T){
 			},
 			buildStubs: func (store *mockdb.MockStore)  {
 				args := db.ListAccountsParams{
+					Owner: testUser.Username,
 					Limit: 5,
 					Offset: 0,
 				}
@@ -274,13 +286,17 @@ func TestListAccountAPI(t *testing.T){
 		request, err := http.NewRequest(http.MethodGet, url, nil)
 		require.NoError(t, err)
 
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, testUser.Username, time.Minute)
+
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)
 	}
 }
 
 func TestDeleteAccountAPI(t *testing.T){
+	testUser, _ := randomUser()
 	account := randomAccount()
+	account.Owner = testUser.Username
 
 	testCases := []struct{
 		name string
@@ -392,13 +408,17 @@ func TestDeleteAccountAPI(t *testing.T){
 		request, err := http.NewRequest(http.MethodDelete, url, nil)
 		require.NoError(t, err)
 
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, testUser.Username, time.Minute)
+
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)
 	}
 }
 
 func TestUpdateAccountAPI(t *testing.T){
+	testUser, _ := randomUser();
 	account := randomAccount()
+	account.Owner = testUser.Username
 	updatedAccount := db.Account{
 		ID: account.ID,
 		Owner: account.Owner,
@@ -505,6 +525,8 @@ func TestUpdateAccountAPI(t *testing.T){
 
 		request, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonData))
 		require.NoError(t, err)
+
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, testUser.Username, time.Minute)
 
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)

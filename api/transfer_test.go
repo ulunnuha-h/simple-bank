@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	mockdb "github.com/ulunnuha-h/simple_bank/db/mock"
@@ -16,8 +17,12 @@ import (
 )
 
 func TestCreateTransferAPI(t *testing.T){
+	fromUser, _ := randomUser();
+	toUser, _ := randomUser();
 	fromAccount := randomAccount();
+	fromAccount.Owner = fromUser.Username
 	toAccount := randomAccount();
+	toAccount.Owner = toUser.Username
 	fromAccount.Currency = "IDR"
 	toAccount.Currency = "IDR"
 
@@ -203,6 +208,8 @@ func TestCreateTransferAPI(t *testing.T){
 
 		request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 		require.NoError(t, err)
+
+		addAuthorization(t, request, server.tokenGenerator, authTypeBearer, fromUser.Username, time.Minute)
 
 		server.router.ServeHTTP(recorder, request)
 		tc.checkReposne(t, recorder)

@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_USER=root
+      - POSTGRES_DB=simple_bank
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d simple_bank"]
+      interval: 5s
+      retries: 5
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_SOURCE=postgresql://root:admin123@postgres:5432/simple_bank?sslmode=disable
+      - GIN_MODE=release
+    depends_on:
+      postgres:
+        condition: service_healthy

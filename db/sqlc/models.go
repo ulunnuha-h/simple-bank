@@ -23,6 +23,17 @@ type Entry struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Session struct {
+	ID           string    `json:"id"`
+	Username     string    `json:"username"`
+	RefreshToken string    `json:"refresh_token"`
+	UserAgent    string    `json:"user_agent"`
+	ClientIp     string    `json:"client_ip"`
+	IsBlocked    bool      `json:"is_blocked"`
+	ExpiredAt    time.Time `json:"expired_at"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type Transfer struct {
 	ID            int64     `json:"id"`
 	FromAccountID int64     `json:"from_account_id"`

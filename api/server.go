@@ -41,6 +41,7 @@ func setupRouter(server *Server) *gin.Engine{
 
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
+	router.GET("/users/refresh", server.refreshToken)
 
 	router.Use(AuthMiddleware(server.tokenGenerator))
 

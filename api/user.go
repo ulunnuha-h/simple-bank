@@ -109,14 +109,75 @@ func (server *Server) loginUser(ctx *gin.Context){
 		return
 	}
 
-	token, err := server.tokenGenerator.CreateToken(req.Username, time.Hour)
+	_, accessToken, err := server.tokenGenerator.CreateToken(req.Username, 10 * time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
+	refreshPayload, refreshToken, err := server.tokenGenerator.CreateToken(req.Username, time.Hour)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	args := db.CreateSessionParams{
+		ID: string(refreshPayload.ID.String()),
+		Username: req.Username,
+		RefreshToken: refreshToken,
+		UserAgent: ctx.Request.UserAgent(),
+		ClientIp: ctx.ClientIP(),
+		IsBlocked: false,
+		ExpiredAt: time.Now().Add(time.Hour),
+	}
+
+	server.store.CreateSession(ctx, args)
+
+	ctx.SetCookie("refresh_token",refreshToken, int(time.Hour), "/", "localhost", false, true)
+
 	ctx.JSON(http.StatusOK, loginUserReponse{
-		AccessToken: token,
+		AccessToken: accessToken,
 		LoggedUser: newUserReponse(user),
+	})
+}
+
+type RefreshTokenResponse struct{
+	Username    string    `json:"username"`
+	AccessToken string `json:"access_token"`
+}
+
+func (server *Server) refreshToken(ctx *gin.Context){
+	token, err := ctx.Cookie("refresh_token")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return	
+	}
+
+	payload, err := server.tokenGenerator.Verify(token)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	session, err := server.store.GetSession(ctx, payload.ID.String())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if session.IsBlocked || time.Now().After(session.ExpiredAt) {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	_, accessToken, err := server.tokenGenerator.CreateToken(session.Username, 10 * time.Minute)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, RefreshTokenResponse{
+		Username: session.Username,
+		AccessToken: accessToken,
 	})
 }

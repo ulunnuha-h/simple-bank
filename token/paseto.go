@@ -19,13 +19,14 @@ func NewPasetoGenerator(secretkey string) (Generator, error){
 	return &PasetoGenerator{secretkey: secretkey}, nil
 }
 
-func (generator *PasetoGenerator) CreateToken(username string, duration time.Duration) (string, error) {
+func (generator *PasetoGenerator) CreateToken(username string, duration time.Duration) (*Payload, string, error) {
 	payload, err := NewPayload(username, duration)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
+	token, err := paseto.NewV2().Encrypt([]byte(generator.secretkey), payload, payload.Footer)
 
-	return paseto.NewV2().Encrypt([]byte(generator.secretkey), payload, payload.Footer)
+	return payload, token, err
 }
 
 func (generator *PasetoGenerator) Verify(token string) (*Payload, error){

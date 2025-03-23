@@ -20,7 +20,7 @@ func addAuthorization(
 	username string,
 	duration time.Duration,
 ){
-	token, err := tokenGenerator.CreateToken(username, duration)
+	_, token, err := tokenGenerator.CreateToken(username, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
 
